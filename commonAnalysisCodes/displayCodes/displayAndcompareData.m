@@ -1,12 +1,18 @@
-function displayAndcompareData(hPlot,data,xs,displaySettings,yLims,displaySignificanceFlag,useMedianFlag,nonMatchedFlag,compareRefFlag,refIndex,omitFreqFlag,omitFreqRange)
+function pValues = displayAndcompareData(hPlot,data,xs,displaySettings,yLims,displaySignificanceFlag,useMedianFlag,nonMatchedFlag,compareRefFlag,refIndex,omitFreqRange)
 
 if ~exist('displaySignificanceFlag','var'); displaySignificanceFlag=0;  end
 if ~exist('useMedianFlag','var');           useMedianFlag=1;            end
 if ~exist('nonMatchedFlag','var');          nonMatchedFlag=1;           end
 if ~exist('compareRefFlag','var');          compareRefFlag=0;           end
 if ~exist('refIndex','var');                refIndex=1;                 end
-if ~exist('omitFreqFlag', 'var');           omitFreqFlag = 0;           end
-if ~exist('omitFreqRange', 'var');          omitFreqRange = [47 53];    end
+
+if ~exist('omitFreqRange', 'var') 
+    omitFreqFlag = 0;
+elseif isempty(omitFreqRange)
+    omitFreqFlag = 0;
+else 
+    omitFreqFlag = 1;
+end
 
 if useMedianFlag
     getLoc = @(g)(squeeze(median(g,1)));
@@ -47,7 +53,7 @@ for i = 1:numGroups
     plotData(xs_valid, mData, sData, displaySettings.colorNames(i,:));
 end
 
-set(gca,'fontsize',displaySettings.fontSizeLarge);
+set(gca,'fontsize',displaySettings.fontSizeMid);
 set(gca,'TickDir','out','TickLength',displaySettings.tickLengthMedium);
 
 if exist('yLims','var') && ~isempty(yLims)
@@ -105,7 +111,7 @@ if displaySignificanceFlag
                         if p < 0.01
                             patch(xVals, yVals, 'k', 'linestyle', 'none');
                         elseif p < 0.05
-                            patch(xVals, yVals, 'c', 'linestyle', 'none');
+                            patch(xVals, yVals,[0.5 0.5 0.5], linestyle', 'none');
                         end
                     end
                 end
@@ -129,13 +135,14 @@ if displaySignificanceFlag
                 if p < 0.01
                     patch(xVals, yVals, 'k', 'linestyle', 'none');
                 elseif p < 0.05
-                    patch(xVals, yVals, 'c', 'linestyle', 'none');
+                    patch(xVals, yVals,[0.5 0.5 0.5], 'linestyle', 'none');
                 end
             end
         end
     else
         allData = [];
         allIDs = [];
+        pValues = nan(size(xs)); 
         for j = 1:numGroups
             allData = cat(1, allData, data{j});
             allIDs = cat(1, allIDs, j + zeros(size(data{j},1), 1));
@@ -160,10 +167,11 @@ if displaySignificanceFlag
                 end
             end
 
+            pValues(i) = p;
             % Getting patch coordinates
             for j = 1:numGroups
-                if min(data{j}) < diff(yLims) / 10
-                    yVals = yLims(1) + [0 0 diff(yLims)/60 diff(yLims)/60]; % to decrease the height of significance pathes when data is too low
+                if min(data{j}) < diff(yLims) / 5
+                    yVals = yLims(1) + [0 0 diff(yLims)/30 diff(yLims)/30]; % to decrease the height of significance pathes when data is too low
                 else
                     yVals = yLims(1) + [0 0 diff(yLims)/20 diff(yLims)/20];
                 end
@@ -184,7 +192,7 @@ if displaySignificanceFlag
 
             % Plotting significance patches only if NOT in omitted range
             if ~omitIdx(i)
-                if p < 0.05, patch(xVals, yVals, 'c', 'linestyle', 'none'); end
+                if p < 0.05, patch(xVals, yVals,[0.5 0.5 0.5], 'linestyle', 'none'); end
                 if p < 0.01, patch(xVals, yVals, 'k', 'linestyle', 'none'); end
             end
         end
@@ -209,7 +217,7 @@ for seg = 1:length(segmentStart)
     yUpper = (mData(idxRange) + sData(idxRange))';
 
     % Plotting main curve
-    plot(xVals, mData(idxRange), 'color', color, 'linewidth', 1);
+    plot(xVals, mData(idxRange), 'color', color, 'linewidth', 1.5);
 
     % Using column vectors for patch function
     patch([xVals; flipud(xVals)], [yLower; flipud(yUpper)], ...

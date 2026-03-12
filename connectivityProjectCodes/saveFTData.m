@@ -1,16 +1,16 @@
 % This program saves data in fieldtrip format
 
-function saveFTData(subjectName,expDate,protocolNameList,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder)
+function saveFTData(subjectName,expDate,protocolNameList,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder,avgRefFlag)
 
 numProtocols = length(protocolNameList);
 
 for i=1:numProtocols
     protocolName = protocolNameList{i};
-    saveFTDataSingleProtocol(subjectName,expDate,protocolName,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder);
+    saveFTDataSingleProtocol(subjectName,expDate,protocolName,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder, avgRefFlag);
 end
 end
 
-function saveFTDataSingleProtocol(subjectName,expDate,protocolName,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder)
+function saveFTDataSingleProtocol(subjectName,expDate,protocolName,folderSourceString,badEyeCondition,badTrialVersion,ftDataFolder, avgRefFlag)
 
 gridType = 'EEG'; capType = 'actiCap64_UOL';
 
@@ -78,11 +78,34 @@ else
     data.timeVals = timeVals;
     data.numTrials = numTrials;
     data.badElecs = badElectrodes;
+    %  FIELDTRIP BUILT-IN 'AVERAGE' RE-REFERENCING
+    % ------------------------------------------------------
+    cfg = [];
 
-    numGoodTrials = data.numTrials;
+    cfg.reref      = 'yes';
+    cfg.refmethod  = 'avg';
+
+    % exclude bad electrodes from reference
+    if ~isempty(badElectrodes)
+        % Convert numeric bad electrode indices to labels
+        badElecLabels = data.label(badElectrodes);
+        cfg.refchannel = setdiff(data.label, badElecLabels);
+    else
+        cfg.refchannel = 'all';
+    end
+
+
+    data = ft_preprocessing(cfg, data);
+
+    data.timeVals = timeVals;
+    data.numTrials = numTrials;
+    data.badElecs = badElectrodes;
+    numGoodTrials = numTrials;
+
 end
 save(ftDataFileName,'data','numGoodTrials');
 end
+
 function elec = getElectrodeDetails_ft(capType)
 
 if strcmp(capType,'actiCap64_UOL')

@@ -1,4 +1,6 @@
 % groupType - abs or rel. When set to absolute (abs), the electrode groups are fixed (e.g. occipital, central etc). When set to relative (rel), the groups are based on their distance from the seed electrodes
+% BadTV - badTrialVersion = 'v8' (by default)
+% BadEC - badEyeCondition = 'ep' or 'wo'. Use 'wo' when eye data is not used.
 
 function runDisplayConnDataAllSubjects(groupType)
 
@@ -49,18 +51,29 @@ refElectrodeList{4} = [2   32+[2 3 30 4 31]]; refElectrodeListName{4} = 'Frontal
 uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0 0 0.5 1/3],'Style','text','String','Ref Elecs','FontSize',fontSizeSmall);
 hRefChoice = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 0 0.5 1/3],'Style','popup','String',refElectrodeListName,'FontSize',fontSizeSmall);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Bad Electrodes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hPanel3 = uipanel('Title','Bad Electrode Condition','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.325 1-panelHeight 0.15 panelHeight]);
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Bad Electrodes & Conn Method %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+hPanel3 = uipanel('Title','Method & Conditions','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.325 1-panelHeight 0.15 panelHeight]);
+% 'Title','Bad Electrode Condition'
 
-% Bad Eye condition
-uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 2/3 0.5 1/3],'Style','text','String','BadEyeCondition','FontSize',fontSizeSmall);
-badEyeConditionList1 = [{'eye position (ep)'} {'none (wo)'}]; badEyeConditionList2 = [{'ep'} {'wo'}];
-hBadEye = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 2/3 0.5 1/3],'Style','popup','String',badEyeConditionList1,'FontSize',fontSizeSmall);
+% Connectivity method
+uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 2/3 0.5 1/3],'Style','text','String','ConnMethod','FontSize',fontSizeSmall);
+connMethodList1 = [{'PPC'} {'wPLI'} {'imag Coh'} {'Lagged Coh'}]; connMethodList2 = [{'ppc'} {'wpli'} {'icoh'} {'laggedCoh'}];
+hConnMethod = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 2/3 0.5 1/3],'Style','popup','String',connMethodList1,'FontSize',fontSizeSmall);
+
+% Referencing
+uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 1/3 0.5 1/3],'Style','text','String','Referencing','FontSize',fontSizeSmall);
+referencingList1 = [{'unipolar ref'} {'average re-ref'}]; referencingList2 = [{'unipolar'} {'avg'}];
+hReferencing = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 1/3 0.5 1/3],'Style','popup','String',referencingList1,'FontSize',fontSizeSmall);
 
 % Bad Trial Version
-uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 1/3 0.5 1/3],'Style','text','String','BadTrialVersion','FontSize',fontSizeSmall);
+uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 0 0.25 1/3],'Style','text','String','BadTV','FontSize',fontSizeSmall);
 badTrialVersionList = {'v8'};
-hBadTrialVersion = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 1/3 0.5 1/3],'Style','popup','String',badTrialVersionList,'FontSize',fontSizeSmall);
+hBadTrialVersion = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.25 0 0.25 1/3],'Style','popup','String',badTrialVersionList,'FontSize',fontSizeSmall);
+
+% Bad Eye Condition
+uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0.5 0 0.25 1/3],'Style','text','String','BadEC','FontSize',fontSizeSmall);
+badEyeConditionList = [{'ep'} {'wo'}]; 
+hBadEyeCondition = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.75 0 0.25 1/3],'Style','popup','String',badEyeConditionList,'FontSize',fontSizeSmall);
 
 % % Bad Electrode Choice
 % uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 0 0.5 1/3],'Style','text','String','BadElecChoice','FontSize',fontSizeSmall);
@@ -69,7 +82,7 @@ hBadTrialVersion = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundCol
 
 %%%%%%%%%%%%%%%%%%%%%%%%% Freq Ranges %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hPanel4 = uipanel('Title','Freq Ranges','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.475 1-panelHeight 0.15 panelHeight]);
-freqRangeList0{1} = [7 10];
+freqRangeList0{1} = [8 12];
 freqRangeList0{2} = [20 32];
 freqRangeList0{3} = [60 96];
 
@@ -135,7 +148,7 @@ hAllPlots.hTopoRef = getPlotHandles(1,2,[0.62 0.55 0.37 0.3],0.002,0.002,1);
 hAllPlots.hTopo  = getPlotHandles(numFreqRanges,3,[0.56 0.05 0.3 0.4],0.005,0.01,1);
 hAllPlots.hConn3 = getPlotHandles(numFreqRanges,1,[0.89 0.053 0.1 0.4],0.01,0.01,1);
 
-connMethod = 'ppc';
+%connMethod = 'ppc';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     function plot_Callback(~,~)
@@ -186,8 +199,10 @@ connMethod = 'ppc';
         analysisChoice = analysisChoiceList2{get(hAnalysisChoice,'val')};
         refElectrodes = refElectrodeList{get(hRefChoice,'val')};
 
-        badEyeCondition = badEyeConditionList2{get(hBadEye,'val')};
+        connMethod = connMethodList2{get(hConnMethod,'val')};
+        referencing = referencingList2{get(hReferencing,'val')};
         badTrialVersion = badTrialVersionList{get(hBadTrialVersion,'val')};
+        badEyeCondition = badEyeConditionList{get(hBadEyeCondition,'val')};
 
         % stRange = [0.25 1.25]; % hard coded for now
 
@@ -209,7 +224,7 @@ connMethod = 'ppc';
         useMedianFlag = get(hUseMedianFlag,'val');
         omitFreqFlag = get(hOmitFreqFlag,'val'); % to remove line noise
 
-        displayConnDataAllSubjects(subjectNameLists,protocolName,analysisChoice,refElectrodes,groupType,connMethod,badEyeCondition,badTrialVersion,freqRangeList,axisRangeList,cutoffList,useMedianFlag,omitFreqFlag,hAllPlots,pairedDataFlag,1);
+        displayConnDataAllSubjects(subjectNameLists,protocolName,analysisChoice,refElectrodes,groupType,connMethod,referencing,badEyeCondition,badTrialVersion,freqRangeList,axisRangeList,cutoffList,useMedianFlag,omitFreqFlag,hAllPlots,pairedDataFlag,1);
 
     end
     function cla_Callback(~,~)

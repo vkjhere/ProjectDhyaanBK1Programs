@@ -2,10 +2,10 @@
 % protocolName - one of EO1, EC1, G1, M1, G2, EC2, EO2, M2
 % analysisChoice - 'st', 'bl' or 'combined'
 % refElectrodes - seed electrodes for which connectivity should be measured and averaged
-% connMethod - connectivity method
-% Option added to return connectivity and topoplot data. Also to simply return these without displaying here.
+% connMethod - connectivity method - one of ppc, wpli, icoh (imag(coh)) and laggedCoh.
+% Option added to return connectivity and topoplot data. Also to simply return these without displaying here (displayDataFlag).
 
-function [connDataToReturn,topoplotDataToReturn,connData,freqVals,connDataElectrodeGroup,electrodeGroupList,groupNameList,binnedCenters] = displayConnDataAllSubjects(subjectNameLists,protocolName,analysisChoice,refElectrodes,groupType,connMethod,badEyeCondition,badTrialVersion,freqRangeList,axisRangeList,cutoffList,useMedianFlag,omitFreqFlag,hAllPlots,pairedDataFlag,displayDataFlag)
+function [connDataToReturn,topoplotDataToReturn,connData,freqVals,connDataElectrodeGroup,electrodeGroupList,groupNameList,binnedCenters] = displayConnDataAllSubjects(subjectNameLists,protocolName,analysisChoice,refElectrodes,groupType,connMethod,referencing,badEyeCondition,badTrialVersion,freqRangeList,axisRangeList,cutoffList,useMedianFlag,omitFreqFlag,hAllPlots,pairedDataFlag,displayDataFlag)
 
 if ~exist('protocolName','var');          protocolName='G1';            end
 if ~exist('analysisChoice','var');        analysisChoice='st';          end
@@ -37,7 +37,11 @@ if ~exist('displayDataFlag','var');       displayDataFlag = 1;          end
 
 numFreqRanges = length(freqRangeList);
 freqRangeColors = copper(numFreqRanges);
-omitFreqRange = [47 53]; % to remove line noise etc. It will leave a blank gap there
+if omitFreqFlag
+    omitFreqRange = [47 53]; % to remove line noise etc.
+else
+    omitFreqRange = [];
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Display options %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 displaySettings.fontSizeLarge = 10;
@@ -58,7 +62,11 @@ yLims = axisRangeList{2};
 % cLimsTopo = axisRangeList{3};
 capType = 'actiCap64_UOL';
 
-saveFolderName = 'savedData';
+if strcmp(referencing, 'unipolar')
+    saveFolderName = 'savedData';
+else
+    saveFolderName = 'savedDataAvgRef';
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Generate plots %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if displayDataFlag
     if isempty(hAllPlots)
@@ -85,7 +93,7 @@ end
 if displayDataFlag
     % Display electrode positions
     if strcmp(groupType,'rel')
-        montageChanlocs = showElectrodeGroups(hTopoRef,capType,electrodeGroupList(1,:),groupNameList,displaySettings); % Just show for the first electrode      
+        montageChanlocs = showElectrodeGroups(hTopoRef,capType,electrodeGroupList(1,:),groupNameList,displaySettings); % Just show for the first electrode
     else
         montageChanlocs = showElectrodeGroups(hTopoRef,capType,electrodeGroupList,groupNameList,displaySettings);
     end
@@ -111,11 +119,11 @@ for i=1:numElectrodeGroups
 
     if displayDataFlag
         % Connectivity as a function of frequency
-        displayAndcompareData(hConn1(i),dataToPlot,freqVals,displaySettings,yLims,1,useMedianFlag,~pairedDataFlag, 0,[],omitFreqFlag,omitFreqRange);
+        displayAndcompareData(hConn1(i),dataToPlot,freqVals,displaySettings,yLims,1,useMedianFlag,~pairedDataFlag, 0,[],omitFreqRange);
         title(groupNameList{i}, 'color', electrodeGroupColorList(i,:));
         xlim(hConn1(i),freqLims);
         if i==1
-            ylabel('PPC'); xlabel('Frequency (Hz)', 'FontSize',9); xticks([0 20 40 60 80]); xticklabels([0 20 40 60 80]);
+            ylabel(connMethod); xlabel('Frequency (Hz)', 'FontSize',9); xticks([0 20 40 60 80]); xticklabels([0 20 40 60 80]);
         end
         if i==numElectrodeGroups
             for j=1:2
@@ -193,7 +201,7 @@ for i=1:numFreqRanges
     if displayDataFlag
         for j=1:3
             axes(hTopo(i,j)); %#ok<*LAXES>
-            topoplot(zeros(1,64),montageChanlocs,'electrodes','on','plotrad',0.6,'headrad',0.6, 'maplimits', [0 1], 'emarker2', {refElectrodes , 'o', 'g', 4, 1}); hold on;
+            topoplot(zeros(1,64),montageChanlocs,'electrodes','on','plotrad',0.6,'headrad',0.6, 'maplimits', [0 1], 'emarker2', {refElectrodes , 'o', 'g', 4, 1}); hold on; % highlighting ref electrodes
             topoplot(data{j}, montageChanlocs,'electrodes','on', 'plotrad',0.6,'headrad',0.6);
             if i==3
                 cbar = colorbar(gca, 'eastoutside');
@@ -210,15 +218,16 @@ for i=1:numFreqRanges
             end
         end
 
-        displayAndcompareData(hConn3(i),dataToCompare,binnedCenters,displaySettings,yLims,1,useMedianFlag,~pairedDataFlag, 0,[],0,[]);
-        if i==3; xticks([-1 -0.5 0 0.5 1]); xticklabels([-1 -0.5 0 0.5 1]); xlabel('cos\theta'); end
+        displayAndcompareData(hConn3(i),dataToCompare,binnedCenters,displaySettings,yLims,1,useMedianFlag,~pairedDataFlag, 0,[], []);
+
+        if i==3; xticks([-1 -0.5 0 0.5 1]); xticklabels([1 0.5 0 -0.5 -1]); xlabel('cos\theta'); end
         if i==1
             for jj=1:2
                 text(-0.1,yLims(2)-0.22*jj,[titleStr{jj} '(' num2str(size(dataToCompare{jj},1)) ')'],'color',displaySettings.colorNames(jj,:),'parent',hConn3(i));
             end
         end
     end
- end
+end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,9 +266,12 @@ for i=1:2
                 freqVals = tmpData.freqPost;
             end
 
-            numGoodElectodes = trace(~isnan(squeeze(connDataTMP2(:,refElectrodes,1))));
+            % numGoodElectrodes = trace(~isnan(squeeze(connDataTMP2(:,refElectrodes,1))));
+            % A ref (seed) electrode is 'bad' only if it has all-NaN conn values with all other electrodes
+            tmp_slice = squeeze(connDataTMP2(:,:,2));   % Taking a slice at 1 Hz, since 'wpli' gives NaNs at 0 Hz
+            numGoodElectrodes = sum(any(~isnan(tmp_slice), 2));
 
-            if numGoodElectodes >= cutoffList(1)
+            if numGoodElectrodes >= cutoffList(1)
                 badSubjectList{i}(j) = 0;
                 connDataTMP{i}{j} = squeeze(mean(connDataTMP2,1,'omitnan'));
 

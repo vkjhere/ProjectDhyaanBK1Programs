@@ -53,7 +53,7 @@ for i = 1:numGroups
     plotData(xs_valid, mData, sData, displaySettings.colorNames(i,:));
 end
 
-set(gca,'fontsize',displaySettings.fontSizeMid);
+set(gca,'fontsize',displaySettings.fontSizeLarge);
 set(gca,'TickDir','out','TickLength',displaySettings.tickLengthMedium);
 
 if exist('yLims','var') && ~isempty(yLims)

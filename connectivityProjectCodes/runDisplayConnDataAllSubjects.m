@@ -51,13 +51,12 @@ refElectrodeList{4} = [2   32+[2 3 30 4 31]]; refElectrodeListName{4} = 'Frontal
 uicontrol('Parent',hPanel2,'Unit','Normalized','Position',[0 0 0.5 1/3],'Style','text','String','Ref Elecs','FontSize',fontSizeSmall);
 hRefChoice = uicontrol('Parent',hPanel2,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 0 0.5 1/3],'Style','popup','String',refElectrodeListName,'FontSize',fontSizeSmall);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Bad Electrodes & Conn Method %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Bad Electrodes, Connectivity Method and Referencing Scheme %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hPanel3 = uipanel('Title','Method & Conditions','fontSize',fontSizeLarge,'Unit','Normalized','Position',[0.325 1-panelHeight 0.15 panelHeight]);
-% 'Title','Bad Electrode Condition'
 
 % Connectivity method
 uicontrol('Parent',hPanel3,'Unit','Normalized','Position',[0 2/3 0.5 1/3],'Style','text','String','ConnMethod','FontSize',fontSizeSmall);
-connMethodList1 = [{'PPC'} {'wPLI'} {'imag Coh'} {'Lagged Coh'}]; connMethodList2 = [{'ppc'} {'wpli'} {'icoh'} {'laggedCoh'}];
+connMethodList1 = [{'PPC'} {'Coherence'} {'wPLI'} {'imag Coherence'} {'Lagged Coherence'}]; connMethodList2 = [{'ppc'} {'coh'} {'wpli'} {'icoh'} {'laggedCoh'}];
 hConnMethod = uicontrol('Parent',hPanel3,'Unit','Normalized','BackgroundColor', backgroundColor, 'Position', [0.5 2/3 0.5 1/3],'Style','popup','String',connMethodList1,'FontSize',fontSizeSmall);
 
 % Referencing

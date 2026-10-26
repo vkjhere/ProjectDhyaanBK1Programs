@@ -36,6 +36,10 @@ elseif strcmpi(analysisType,'conn')
 
     electrodeGroupList{5} = [1 3 4 32+[1 2 4 5]];                          groupNameList{5} = 'Frontal_L'; % Frontal
     electrodeGroupList{6} = [30:32 32+[28:31]];                            groupNameList{6} = 'Frontal_R'; % Frontal
+
+elseif strcmpi(analysisType,'ecg')
+
+    [~,~,~,electrodeGroupList,groupNameList] = electrodePositionOnGrid(1,gridType,[],capType); % Get the default groups
 end
 
 end
